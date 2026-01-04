@@ -1,0 +1,1 @@
+# gienahData-GeoAssetAI-Asset-Level-Structural-Protection-Proxy
