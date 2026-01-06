@@ -73,7 +73,7 @@ The pipeline is built on standard geospatial primitives (raster DEMs, vector hyd
 
 ## Outputs
 
-- `data/assets_scored_rescored_fast.geojson` — per-asset scores and categories  
+- `assets_nl_scored_reclassified_fast.geojson` — per-asset scores and categories  
 - `figures/*` — final dark-theme national map and Rotterdam–Antwerpen zoom  
 
 ---
