@@ -24,57 +24,89 @@ asset-level metrics**.
   <em>Zoomed view of the Rotterdam–Antwerpen corridor highlighting defended, partially defended, and non-defended assets.</em>
 </p>
 
-# Why asset-level readiness scores matter
+---
 
-Climate and physical risks manifest at the asset scale, while most publicly available indicators remain aggregated at regional or national levels. This project derives asset-level adaptation readiness scores by integrating elevation models, hydrological features, and flood-defense infrastructure into a consistent spatial framework. By converting heterogeneous geospatial signals into comparable metrics, the approach supports risk differentiation within portfolios, enabling business actors to identify assets that are structurally protected versus those where exposure remains unmanaged, informing adaptation planning, insurance assessment, and capital allocation.
+## Why asset-level readiness scores matter
 
-# Scalability and data-driven extensibility
+Climate and physical risks are asset-specific, yet most public indicators are aggregated at regional scales. Per-asset readiness scores enable risk differentiation within portfolios and help identify assets that are structurally protected versus those with unmanaged exposure — informing adaptation planning, insurance underwriting, and capital allocation.
 
-The pipeline is built on widely available geospatial data sources and standard spatial data structures to enable scalability. Elevation is sourced from raster DEMs, land extent from Natural Earth, and surface water features from OpenStreetMap-derived Geofabrik datasets; flood defenses are ingested as vector geometries. These inputs are normalized into a single projected CRS (EPSG:28992) and processed through raster- and index-based spatial algorithms, allowing the methodology to scale to hundreds of thousands of assets and to be extended to new geographies by substituting equivalent DEMs, land masks, and hydrology layers without altering the core logic.
+---
 
-# Technical challenges, data risks, and mitigation strategies
+## Scalability & extensibility
 
-Key challenges include distinguishing sea from inland water in low-elevation terrain, handling inconsistent geometry quality in open-source hydrology datasets, and computing proximity metrics efficiently at scale. These are mitigated through a rule-based sea definition combining DEM thresholds and authoritative land masks, geometry normalization and sampling of flood-defense features, and the use of Euclidean Distance Transforms and KD-Tree spatial indexing to avoid expensive pairwise spatial operations. Residual risks remain due to incompleteness or temporal mismatch in open datasets (e.g. OSM coverage variability, static DEM assumptions), which are explicitly acknowledged; the pipeline is therefore designed to be deterministic, auditable, and replaceable, allowing higher-quality or proprietary data sources to be integrated as they become available.
+The pipeline is built on standard geospatial primitives (raster DEMs, vector hydrology, defense geometries) and efficient spatial algorithms (Euclidean Distance Transform, KD-Tree indexing). Inputs are normalized to a projected CRS and processed in raster and vector stages so the approach scales to hundreds of thousands of assets. Extending to new geographies requires substituting equivalent DEMs, land masks, and hydrology layers without altering core logic.
 
-# Data sources and assumptions
+---
 
-The methodology integrates multiple geospatial data sources, each selected for coverage, consistency, and reproducibility. Elevation is derived from a raster Digital Elevation Model (DEM) projected to EPSG:28992 and treated as a static representation of terrain. Land extent is defined using Natural Earth land masks to establish authoritative separation between land and open sea. Surface water features (coastal waters, rivers, channels, lakes) are sourced from OpenStreetMap-derived Geofabrik datasets and ingested as vector geometries. Flood-defense infrastructure is provided as vector datasets representing levees, dikes, and related protection structures, normalized across geometry types.
+## Technical challenges, data risks & mitigations
 
-Key assumptions include the use of elevation thresholds (DEM ≤ 0 m) combined with land masks to delineate coastal sea exposure, the treatment of hydrological features as static in time, and the interpretation of proximity to flood defenses as a proxy for structural protection effectiveness. Open-source hydrology and defense datasets may exhibit spatial incompleteness, temporal lag, or regional heterogeneity; these limitations are explicitly acknowledged. The pipeline is therefore designed to be data-source agnostic, enabling the substitution of higher-resolution, proprietary, or time-varying datasets without changing the core processing logic or scoring framework.
+**Challenges**
+- Distinguishing sea vs inland water in very low terrain.
+- Inconsistent geometry quality and coverage in open datasets (e.g., OSM/Geofabrik).
+- Computing proximity and density metrics efficiently at asset scale.
 
-## Repository structure
-notebooks/
-01_data_prep.ipynb
-02_sea_land_masks.ipynb
-03_defense_sampling.ipynb
-04_scoring_and_mapping.ipynb
-05_report_and_exports.ipynb
+**Mitigations**
+- Deterministic rule combining DEM thresholds (e.g., `DEM <= 0`) with authoritative land masks to label sea areas.
+- Geometry normalization, morphological cleaning and size filtering to stabilize water/lake polygons.
+- Raster Euclidean Distance Transform (EDT) and KD-Tree queries to avoid expensive pairwise spatial joins, enabling fast rescoring.
 
+**Residual risks**
+- OSM/Geofabrik coverage variability, static DEM assumptions, and temporal mismatch between datasets. The pipeline is data-agnostic and accepts higher-quality proprietary layers when available.
 
-## How to run
+---
 
-1. Install dependencies:
-pip install -r requirements.txt
+## Data sources & assumptions
 
-2. Place required input data in a local `data/` folder (not tracked in Git):
-- `merged_dem_rd_crop.tif` (EPSG:28992)
-- Natural Earth land mask (raster or vector)
-- Geofabrik water polygons & waterways
-- Flood defense geometries
-- Asset point dataset
+**Primary inputs**
+- **DEM:** raster Digital Elevation Model (projected to EPSG:28992). Treated as static terrain.
+- **Land mask:** Natural Earth (or equivalent) to separate land from open sea.
+- **Hydrology:** OpenStreetMap/Geofabrik water polygons and waterways (rivers, channels, lakes).
+- **Defenses:** Vector dataset of flood defenses (polygons/lines/points) normalized across types.
+- **Assets:** Point dataset of asset locations to score.
 
-3. Run notebooks in order:
-   `01_data_prep.ipynb`
-   `02_sea_land_masks.ipynb`
-   `03_defense_sampling.ipynb`
-   `04_scoring_and_mapping.ipynb`
-   `05_report_and_exports.ipynb`
+**Key assumptions**
+- Coastal exposure is approximated by `(DEM <= 0) AND not in land_mask` combined with selected OSM water polygons.
+- Proximity to defenses and local defense density is used as a proxy for structural protection.
+- Datasets are treated as static snapshots; temporal changes in infrastructure or water extent are not modeled here.
+
+---
 
 ## Outputs
 
-- Asset-level scores and categories (`assets_scored_rescored_fast.geojson`)
-- Summary CSV by defense category
-- High-quality dark-theme maps (national + Rotterdam–Antwerpen zoom)
+- `data/assets_scored_rescored_fast.geojson` — per-asset scores and categories  
+- `figures/*` — final dark-theme national map and Rotterdam–Antwerpen zoom  
+- `reports/` — CSV summaries and visual exports
+
+---
+
+## Notebooks (run in order)
+
+1. `01_data_prep.ipynb` — load and reproject DEM, Natural Earth land, Geofabrik water.  
+2. `02_sea_land_masks.ipynb` — produce `sea_raster_bool.npy`, `final_sea_polygons.geojson`, `shore_points.npy`, and basemap preview.  
+3. `03_defense_sampling.ipynb` — normalize/expand defense geometries and sample defense points.  
+4. `04_scoring_and_mapping.ipynb` — compute distances, density, `main_score` (adaptation score), assign categories, and produce maps.  
+5. `05_report_and_exports.ipynb` — exports, CSV summaries and final figures.
+
+---
+
+## How to run (local, minimal)
+
+1. `pip install -r requirements.txt`  
+2. Place inputs in `data/` (not tracked):  
+   - `merged_dem_rd_crop.tif` (EPSG:28992)  
+   - Natural Earth land mask (raster or vector)  
+   - Geofabrik water polygons & waterways (`all_geofabrik_water_polygons_clipped.geojson`, `all_geofabrik_water_lines.geojson`)  
+   - Flood defense geometries (`real_flood_defenses_expanded.geojson`)  
+   - Asset point dataset (European Pollutant Release and Transfer Register (E-PRTR) / Industrial Emissions Directive (IED) registry)  
+3. Run notebooks sequentially in `notebooks/`.
+
+---
+
+## Notes
+
+Large data files are intentionally excluded from version control. All processing steps are deterministic and reproducible given the same inputs. The pipeline is designed to be auditable: canonical intermediate files (raster masks and sampled defense points) are saved for review and downstream model integration.
+
+---
 
 ## Notes
 
