@@ -9,7 +9,7 @@ transforming heterogeneous geospatial inputs into **model-ready, auditable
 asset-level metrics**.
 
 <p align="center">
-  <img src="figure/final_map_rescored_fast_dark_filtered_highres.png" width="900">
+  <img src="figures/final_map_rescored_fast_dark_filtered_highres.png" width="900">
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@ asset-level metrics**.
 </p>
 
 <p align="center">
-  <img src="figure/final_map_rescored_fast_zoom_rotterdam_antwerpen_extended.PNG" width="900">
+  <img src="figures/final_map_rescored_fast_zoom_rotterdam_antwerpen_extended.PNG" width="900">
 </p>
 
 <p align="center">
