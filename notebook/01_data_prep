@@ -1,0 +1,120 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 01_data_prep.ipynb\n",
+    "\n",
+    "## Purpose\n",
+    "Prepare canonical geospatial inputs for the GeoAssetAI pipeline.\n",
+    "\n",
+    "**This notebook:**\n",
+    "- Loads DEM, Natural Earth land mask, and Geofabrik water layers\n",
+    "- Ensures a common CRS (EPSG:28992)\n",
+    "- Saves cleaned canonical layers to `data/`\n",
+    "\n",
+    "Run this notebook first."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "from pathlib import Path\n",
+    "import geopandas as gpd\n",
+    "import rasterio\n",
+    "import numpy as np\n",
+    "import warnings\n",
+    "warnings.filterwarnings('ignore')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "# Paths\n",
+    "ROOT = Path('/home/jovyan/work/geoassetai_env')\n",
+    "DATA = ROOT / 'data'\n",
+    "DATA.mkdir(parents=True, exist_ok=True)\n",
+    "\n",
+    "DEM_TIF = DATA / 'merged_dem_rd_crop.tif'\n",
+    "WATER_POLYS = DATA / 'all_geofabrik_water_polygons_clipped.geojson'\n",
+    "WATER_LINES = DATA / 'all_geofabrik_water_lines.geojson'\n",
+    "NE_LAND = DATA / 'ne_land_mask.tif'\n",
+    "\n",
+    "TARGET_CRS = 'EPSG:28992'"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "# Load DEM and validate CRS\n",
+    "if not DEM_TIF.exists():\n",
+    "    raise FileNotFoundError('DEM not found: merged_dem_rd_crop.tif')\n",
+    "\n",
+    "with rasterio.open(DEM_TIF) as src:\n",
+    "    print('DEM CRS:', src.crs)\n",
+    "    print('DEM shape:', src.height, src.width)\n",
+    "    if src.crs.to_string() != TARGET_CRS:\n",
+    "        raise ValueError('DEM must be in EPSG:28992')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "# Load and reproject water polygons\n",
+    "if WATER_POLYS.exists():\n",
+    "    water_polys = gpd.read_file(WATER_POLYS)\n",
+    "    if water_polys.crs.to_string() != TARGET_CRS:\n",
+    "        water_polys = water_polys.to_crs(TARGET_CRS)\n",
+    "    water_polys.to_file(WATER_POLYS, driver='GeoJSON')\n",
+    "    print('Water polygons ready:', len(water_polys))\n",
+    "else:\n",
+    "    print('Water polygons not found – expected Geofabrik output.')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "# Load and reproject water lines\n",
+    "if WATER_LINES.exists():\n",
+    "    water_lines = gpd.read_file(WATER_LINES)\n",
+    "    if water_lines.crs.to_string() != TARGET_CRS:\n",
+    "        water_lines = water_lines.to_crs(TARGET_CRS)\n",
+    "    water_lines.to_file(WATER_LINES, driver='GeoJSON')\n",
+    "    print('Water lines ready:', len(water_lines))\n",
+    "else:\n",
+    "    print('Water lines not found – expected Geofabrik output.')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Output\n",
+    "- `merged_dem_rd_crop.tif`\n",
+    "- `all_geofabrik_water_polygons_clipped.geojson`\n",
+    "- `all_geofabrik_water_lines.geojson`\n",
+    "\n",
+    "Proceed to **02_sea_land_masks.ipynb**."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
+
