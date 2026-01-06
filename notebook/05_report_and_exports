@@ -1,0 +1,71 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 05_report_and_exports.ipynb\n",
+    "\n",
+    "Package final outputs and write a concise methods summary."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "from pathlib import Path\n",
+    "import shutil\n",
+    "import pandas as pd\n",
+    "\n",
+    "ROOT = Path('/home/jovyan/work/geoassetai_env')\n",
+    "DATA = ROOT / 'data'\n",
+    "OUT = DATA / 'report_package'\n",
+    "OUT.mkdir(exist_ok=True)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "files = [\n",
+    "    'assets_scored_rescored_fast.geojson',\n",
+    "    'assets_category_counts_rescored_fast.csv',\n",
+    "    'final_sea_polygons.geojson',\n",
+    "    'shore_points.geojson',\n",
+    "    'def_points.geojson'\n",
+    "]\n",
+    "\n",
+    "for f in files:\n",
+    "    src = DATA / f\n",
+    "    if src.exists():\n",
+    "        shutil.copy(src, OUT / f)\n",
+    "        print('Copied', f)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "methods = '''\n",
+    "GeoAssetAI — Asset-Level Structural Protection Proxy\n",
+    "\n",
+    "Method summary:\n",
+    "1. DEM-based sea delineation using elevation threshold and hydrology.\n",
+    "2. Raster EDT for fast distance-to-coast computation.\n",
+    "3. Flood-defense sampling at ~500 m and KDTree proximity queries.\n",
+    "4. Composite adaptation score from defense proximity and density.\n",
+    "5. Asset categorization into defended, partially defended, mainland-not-exposed, and not defended.\n",
+    "'''\n",
+    "\n",
+    "(OUT / 'methods_summary.txt').write_text(methods)\n",
+    "print('Wrote methods_summary.txt')"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {"name": "python3","display_name": "Python 3"},
+  "language_info": {"name": "python"}
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
