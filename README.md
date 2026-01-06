@@ -1,3 +1,22 @@
+# GeoAssetAI — Asset-Level Structural Protection Proxy
+
+<p align="center">
+  <img src="figures/final_map_rescored_fast_dark_filtered_highres.png" width="900">
+</p>
+
+<p align="center">
+  <em>Asset-level adaptation score across the Netherlands, combining flood-defense proximity, local defense density, and coastal exposure.</em>
+</p>
+
+<p align="center">
+  <img src="figures/final_map_rescored_fast_zoom_rotterdam_antwerpen_extended.png" width="900">
+</p>
+
+<p align="center">
+  <em>Zoomed view of the Rotterdam–Antwerpen corridor highlighting defended, partially defended, and non-defended assets.</em>
+</p>
+
+
 # gienahData-GeoAssetAI-Asset-Level-Adaptation-Readiness
 
 # GeoAssetAI — Asset-Level Adaptation Readiness
