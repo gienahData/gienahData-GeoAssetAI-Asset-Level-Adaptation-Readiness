@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="figure/final_map_rescored_fast_zoom_rotterdam_antwerpen_extended.png" width="900">
+  <img src="figure/final_map_rescored_fast_zoom_rotterdam_antwerpen_extended.PNG" width="900">
 </p>
 
 <p align="center">
