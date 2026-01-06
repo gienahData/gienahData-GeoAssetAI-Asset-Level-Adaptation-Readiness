@@ -1,6 +1,6 @@
-# gienahData-GeoAssetAI-Asset-Level-Structural-Protection-Proxy
+# gienahData-GeoAssetAI-Asset-Level-Adaptation-Readiness
 
-# GeoAssetAI — Asset-Level Structural Protection Proxy
+# GeoAssetAI — Asset-Level Adaptation Readiness
 
 This repository contains a reproducible, geospatial AI pipeline for computing an
 asset-level **adaptation / structural protection proxy** using elevation data,
