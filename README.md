@@ -1,5 +1,13 @@
 # GeoAssetAI — Asset-Level Adaptation Readiness
 
+This repository contains a reproducible, geospatial AI pipeline for computing an
+asset-level **adaptation / structural protection proxy** using elevation data,
+hydrology, and flood defense infrastructure.
+
+The project is designed to support climate and physical-risk analytics by
+transforming heterogeneous geospatial inputs into **model-ready, auditable
+asset-level metrics**.
+
 <p align="center">
   <img src="figure/final_map_rescored_fast_dark_filtered_highres.png" width="900">
 </p>
@@ -33,18 +41,6 @@ Key challenges include distinguishing sea from inland water in low-elevation ter
 The methodology integrates multiple geospatial data sources, each selected for coverage, consistency, and reproducibility. Elevation is derived from a raster Digital Elevation Model (DEM) projected to EPSG:28992 and treated as a static representation of terrain. Land extent is defined using Natural Earth land masks to establish authoritative separation between land and open sea. Surface water features (coastal waters, rivers, channels, lakes) are sourced from OpenStreetMap-derived Geofabrik datasets and ingested as vector geometries. Flood-defense infrastructure is provided as vector datasets representing levees, dikes, and related protection structures, normalized across geometry types.
 
 Key assumptions include the use of elevation thresholds (DEM ≤ 0 m) combined with land masks to delineate coastal sea exposure, the treatment of hydrological features as static in time, and the interpretation of proximity to flood defenses as a proxy for structural protection effectiveness. Open-source hydrology and defense datasets may exhibit spatial incompleteness, temporal lag, or regional heterogeneity; these limitations are explicitly acknowledged. The pipeline is therefore designed to be data-source agnostic, enabling the substitution of higher-resolution, proprietary, or time-varying datasets without changing the core processing logic or scoring framework.
-
-# gienahData-GeoAssetAI-Asset-Level-Adaptation-Readiness
-
-# GeoAssetAI — Asset-Level Adaptation Readiness
-
-This repository contains a reproducible, geospatial AI pipeline for computing an
-asset-level **adaptation / structural protection proxy** using elevation data,
-hydrology, and flood defense infrastructure.
-
-The project is designed to support climate and physical-risk analytics by
-transforming heterogeneous geospatial inputs into **model-ready, auditable
-asset-level metrics**.
 
 ## Repository structure
 notebooks/
