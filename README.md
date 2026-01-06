@@ -1,4 +1,4 @@
-# GeoAssetAI — Asset-Level Structural Protection Proxy
+# GeoAssetAI — Asset-Level Adaptation Readiness
 
 <p align="center">
   <img src="figure/final_map_rescored_fast_dark_filtered_highres.png" width="900">
