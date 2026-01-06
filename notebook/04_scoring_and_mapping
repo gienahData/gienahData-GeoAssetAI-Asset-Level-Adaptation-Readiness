@@ -1,0 +1,114 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 04_scoring_and_mapping.ipynb\n",
+    "\n",
+    "Compute fast distance-based scores using raster EDT and KDTree, assign categories, and create final maps."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "from pathlib import Path\n",
+    "import numpy as np\n",
+    "import geopandas as gpd\n",
+    "import rasterio\n",
+    "from rasterio.transform import rowcol\n",
+    "from scipy import ndimage as ndi\n",
+    "from scipy.spatial import cKDTree\n",
+    "import pandas as pd\n",
+    "import time\n",
+    "import warnings\n",
+    "warnings.filterwarnings('ignore')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "ROOT = Path('/home/jovyan/work/geoassetai_env')\n",
+    "DATA = ROOT / 'data'\n",
+    "\n",
+    "DEM_TIF = DATA / 'merged_dem_rd_crop.tif'\n",
+    "SEA_RASTER = DATA / 'sea_raster_bool.npy'\n",
+    "DEF_POINTS = DATA / 'def_points.geojson'\n",
+    "ASSETS_IN = DATA / 'assets_scored.geojson'\n",
+    "\n",
+    "ASSETS_OUT = DATA / 'assets_scored_rescored_fast.geojson'\n",
+    "SUMMARY_CSV = DATA / 'assets_category_counts_rescored_fast.csv'\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "with rasterio.open(DEM_TIF) as src:\n",
+    "    transform = src.transform\n",
+    "    crs = src.crs\n",
+    "    h, w = src.height, src.width\n",
+    "    px = (abs(transform.a) + abs(transform.e)) / 2.0\n",
+    "\n",
+    "sea_bool = np.load(SEA_RASTER)\n",
+    "edt = ndi.distance_transform_edt(~sea_bool) * px\n",
+    "\n",
+    "assets = gpd.read_file(ASSETS_IN).to_crs(crs)\n",
+    "coords = np.array([[g.x, g.y] for g in assets.geometry])\n",
+    "rows, cols = zip(*[rowcol(transform, x, y) for x, y in coords])\n",
+    "rows = np.clip(rows, 0, h-1)\n",
+    "cols = np.clip(cols, 0, w-1)\n",
+    "assets['dist_to_coast_m'] = edt[rows, cols]\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "def_pts = gpd.read_file(DEF_POINTS).to_crs(crs)\n",
+    "def_coords = np.array([[p.x, p.y] for p in def_pts.geometry])\n",
+    "tree = cKDTree(def_coords)\n",
+    "\n",
+    "d_dist, _ = tree.query(coords, k=1)\n",
+    "assets['dist_to_def_m'] = d_dist\n",
+    "assets['def_count_local'] = [len(tree.query_ball_point(c, r=1000)) for c in coords]\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "# scoring\n",
+    "assets['score_def'] = 1.0 / (1.0 + (assets['dist_to_def_m'] / 1000.0) ** 1.5)\n",
+    "assets['score_density'] = np.minimum(assets['def_count_local'] / 5.0, 1.0)\n",
+    "assets['main_score'] = (0.6 * assets['score_def'] + 0.4 * assets['score_density']).clip(0,1)\n",
+    "\n",
+    "# categories (final approved set)\n",
+    "def categorize(r):\n",
+    "    if r['dist_to_coast_m'] > 5000:\n",
+    "        return 'Mainland, not exposed'\n",
+    "    if r['dist_to_def_m'] <= 1000 and r['def_count_local'] >= 5:\n",
+    "        return 'Defended'\n",
+    "    if r['dist_to_def_m'] <= 1000:\n",
+    "        return 'Partially defended (close-low-density)'\n",
+    "    return 'Not defended'\n",
+    "\n",
+    "assets['defense_category'] = assets.apply(categorize, axis=1)\n",
+    "assets.to_file(ASSETS_OUT, driver='GeoJSON')\n",
+    "\n",
+    "summary = assets['defense_category'].value_counts().reset_index()\n",
+    "summary.columns = ['defense_category','count']\n",
+    "summary.to_csv(SUMMARY_CSV, index=False)\n",
+    "print(summary)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {"name": "python3","display_name": "Python 3"},
+  "language_info": {"name": "python"}
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
