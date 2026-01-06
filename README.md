@@ -107,9 +107,4 @@ Large data files are intentionally excluded from version control. All processing
 
 ---
 
-## Notes
-
-Large data files are intentionally excluded from version control.
-The notebooks are deterministic and reproducible given the same inputs.
-
 Commit change
