@@ -1,7 +1,7 @@
 # GeoAssetAI — Asset-Level Structural Protection Proxy
 
 <p align="center">
-  <img src="figures/final_map_rescored_fast_dark_filtered_highres.png" width="900">
+  <img src="figure/final_map_rescored_fast_dark_filtered_highres.png" width="900">
 </p>
 
 <p align="center">
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="figures/final_map_rescored_fast_zoom_rotterdam_antwerpen_extended.png" width="900">
+  <img src="figure/final_map_rescored_fast_zoom_rotterdam_antwerpen_extended.png" width="900">
 </p>
 
 <p align="center">
