@@ -1,1 +1,118 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 03_defense_sampling.ipynb\n",
+    "\n",
+    "## Purpose\n",
+    "Normalize flood-defense geometries and sample defense points at ~500 m spacing.\n",
+    "\n",
+    "Outputs written to `data/`:\n",
+    "- `def_points.geojson`\n",
+    "- `def_polys.geojson`\n",
+    "- `def_lines.geojson`\n",
+    "\n",
+    "Run after `02_sea_land_masks.ipynb`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "from pathlib import Path\n",
+    "import geopandas as gpd\n",
+    "import numpy as np\n",
+    "from shapely.geometry import Point\n",
+    "import math\n",
+    "import warnings\n",
+    "warnings.filterwarnings('ignore')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "ROOT = Path('/home/jovyan/work/geoassetai_env')\n",
+    "DATA = ROOT / 'data'\n",
+    "\n",
+    "DEF_SRC = DATA / 'real_flood_defenses_expanded.geojson'\n",
+    "OUT_POINTS = DATA / 'def_points.geojson'\n",
+    "OUT_LINES = DATA / 'def_lines.geojson'\n",
+    "OUT_POLYS = DATA / 'def_polys.geojson'\n",
+    "\n",
+    "TARGET_CRS = 'EPSG:28992'\n",
+    "SPACING = 500.0  # meters"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "if not DEF_SRC.exists():\n",
+    "    raise FileNotFoundError('Flood defense source not found: real_flood_defenses_expanded.geojson')\n",
+    "\n",
+    "defs = gpd.read_file(DEF_SRC).to_crs(TARGET_CRS)\n",
+    "print('Loaded defenses:', len(defs), 'geometry types:', set(defs.geometry.type))\n",
+    "\n",
+    "defs_polys = defs[defs.geometry.type.isin(['Polygon','MultiPolygon'])].copy()\n",
+    "defs_lines = defs[defs.geometry.type.isin(['LineString','MultiLineString'])].copy()\n",
+    "defs_points = defs[defs.geometry.type.isin(['Point','MultiPoint'])].copy()\n",
+    "\n",
+    "if not defs_polys.empty:\n",
+    "    defs_polys.to_file(OUT_POLYS, driver='GeoJSON')\n",
+    "if not defs_lines.empty:\n",
+    "    defs_lines.to_file(OUT_LINES, driver='GeoJSON')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "def sample_line(line, spacing):\n",
+    "    pts = []\n",
+    "    if line.is_empty:\n",
+    "        return pts\n",
+    "    if line.geom_type == 'MultiLineString':\n",
+    "        for seg in line.geoms:\n",
+    "            pts += sample_line(seg, spacing)\n",
+    "    else:\n",
+    "        L = line.length\n",
+    "        n = max(int(math.floor(L / spacing)), 1)\n",
+    "        for i in range(n + 1):\n",
+    "            pts.append(line.interpolate(min(i * spacing, L)))\n",
+    "    return pts\n",
+    "\n",
+    "sampled = []\n",
+    "for g in defs_lines.geometry:\n",
+    "    sampled += sample_line(g, SPACING)\n",
+    "\n",
+    "for poly in defs_polys.geometry:\n",
+    "    sampled += sample_line(poly.boundary, SPACING)\n",
+    "\n",
+    "for p in defs_points.geometry:\n",
+    "    if p.geom_type == 'Point':\n",
+    "        sampled.append(p)\n",
+    "    else:\n",
+    "        sampled += list(p.geoms)\n",
+    "\n",
+    "# deduplicate\n",
+    "uniq = {(round(p.x,3), round(p.y,3)): p for p in sampled}\n",
+    "pts = list(uniq.values())\n",
+    "\n",
+    "def_pts = gpd.GeoDataFrame({'geometry': pts}, crs=TARGET_CRS)\n",
+    "def_pts.to_file(OUT_POINTS, driver='GeoJSON')\n",
+    "\n",
+    "print('Saved defense points:', len(def_pts))"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {"name": "python3","display_name": "Python 3"},
+  "language_info": {"name": "python"}
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
 
