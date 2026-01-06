@@ -1,1 +1,25 @@
+# Core scientific stack
+numpy
+scipy
+pandas
 
+# Geospatial stack
+geopandas
+rasterio
+shapely
+fiona
+pyproj
+
+# Visualization
+matplotlib
+Pillow
+
+# Spatial indexing / performance
+rtree
+
+# Testing
+pytest
+
+
+#This assumes a Python ≥3.9 environment.
+#On many systems, geopandas, rasterio, fiona, and rtree are best installed via conda-forge due to native dependencies.
